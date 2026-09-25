@@ -12,7 +12,6 @@ do.cleanup=1
 do.cleanuponabort=0
 device.name1=lemonade
 device.name2=lemonadep
-device.name3=lemonadev
 device.name4=OnePlus9
 device.name5=OnePlus9Pro
 supported.versions=
