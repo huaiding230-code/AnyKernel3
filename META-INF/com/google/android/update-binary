@@ -615,9 +615,8 @@ if [ $? != 0 ]; then
   abort;
 fi;
 
-do_modules;
-if [ $? != 0 ]; then
-  abort "! Failed to prepare AnyKernel module helper";
+if [ "$(file_getprop anykernel.sh do.modules)" == 1 ]; then
+  do_modules || abort "! Failed to prepare AnyKernel module helper";
 fi;
 
 do_preinit || abort "! Failed to stage display driver in /metadata; refusing incomplete install";
