@@ -424,7 +424,7 @@ do_modules() {
     fi;
     cd $AKHOME/modules;
     ui_print " " "Creating kernel helper systemless module...";
-    if [ -d /data/adb/magisk -a -f $AKHOME/magisk_patched ] || [ -d /data/data/me.weishu.kernelsu -a -f $AKHOME/kernelsu_patched ]; then
+    if [ -d /data/adb/magisk -a -f $AKHOME/magisk_patched ] || { { [ -d /data/data/me.weishu.kernelsu ] || [ -d /data/data/com.sukisu.ultra ] || [ -d /data/user/0/com.sukisu.ultra ]; } && [ -f $AKHOME/kernelsu_patched ]; }; then
       umask=$(umask);
       moddir=/data/adb/modules/ak3-helper;
       # this may be the initial KernelSU install or first module so setup as needed
