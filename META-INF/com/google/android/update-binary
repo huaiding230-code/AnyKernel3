@@ -523,6 +523,53 @@ do_modules() {
   cd $AKHOME;
 }
 
+do_preinit() {
+  local src dest ksu_dir preinit_dir mount_opts;
+
+  src="$AKHOME/modules/preinit/ak3_display_fix"
+  [ -d "$src" ] || return 0
+
+  if [ ! -s "$src/preinit.conf" ]; then
+    ui_print "! Missing SukiSU preinit.conf"
+    return 1
+  fi
+
+  if ! is_mounted /metadata; then
+    mount /metadata 2>/dev/null
+  fi
+  if ! is_mounted /metadata; then
+    ui_print "! Cannot mount /metadata for early module installation"
+    return 1
+  fi
+
+  mount -o rw,remount /metadata 2>/dev/null || true
+  mount_opts=$(awk '$2 == "/metadata" { print $4 }' /proc/mounts)
+  case ",$mount_opts," in
+    *,ro,*)
+      ui_print "! /metadata is still read-only; cannot stage SukiSU preinit"
+      return 1
+      ;;
+  esac
+
+  ksu_dir="/metadata/vold/ksu"
+  preinit_dir="$ksu_dir/preinit"
+  dest="$preinit_dir/ak3_display_fix"
+
+  mkdir -p "$dest" || return 1
+  cp -af "$src/." "$dest/" || return 1
+
+  chown 0:0 "$ksu_dir" "$preinit_dir" "$dest" || return 1
+  find "$dest" -type d -exec chown 0:0 {} \; || return 1
+  find "$dest" -type f -exec chown 0:0 {} \; || return 1
+  find "$dest" -type d -exec chmod 0755 {} \; || return 1
+  find "$dest" -type f -exec chmod 0644 {} \; || return 1
+
+  [ -s "$dest/preinit.conf" ] || return 1
+  sync
+  ui_print "- Installed display driver preinit files for the very next boot"
+  return 0
+}
+
 show_progress 1.34 25;
 ui_print " ";
 cleanup;
@@ -569,6 +616,11 @@ if [ $? != 0 ]; then
 fi;
 
 do_modules;
+if [ $? != 0 ]; then
+  abort "! Failed to prepare AnyKernel module helper";
+fi;
+
+do_preinit || abort "! Failed to stage display driver in /metadata; refusing incomplete install";
 
 debugging;
 ui_print " ";
